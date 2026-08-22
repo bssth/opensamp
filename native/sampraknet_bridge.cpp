@@ -1990,7 +1990,10 @@ void ScrGameText(RPCParameters* rpcParams)
     bsData.Read(iTime);
     bsData.Read(iLength);
 
-    if (iLength > 400) return; // tsk tsk, kye
+    // iLength is server-controlled and signed. `> 400` let 400 through, and the
+    // terminator below then wrote one byte past the end of the buffer; a
+    // negative length skipped the check entirely and wrote below it.
+    if (iLength < 0 || iLength >= static_cast<int>(sizeof(szMessage))) return;
 
     bsData.Read(szMessage, iLength);
     szMessage[iLength] = '\0';
@@ -2687,6 +2690,8 @@ void ScrShowTextDraw(RPCParameters* rpcParams)
     bsData.Read(wTextID);
     bsData.Read((PCHAR)&TextDrawTransmit, sizeof(TEXT_DRAW_TRANSMIT));
     bsData.Read(cTextLen);
+    // cTextLen is server-controlled and reaches 65535; cText is 1 KiB.
+    if (cTextLen >= sizeof(cText)) return;
     bsData.Read(cText, cTextLen);
     cText[cTextLen] = '\0';
 
@@ -2723,6 +2728,8 @@ void ScrEditTextDraw(RPCParameters* rpcParams)
 
     bsData.Read(wTextID);
     bsData.Read(cTextLen);
+    // cTextLen is server-controlled and reaches 65535; cText is 1 KiB.
+    if (cTextLen >= sizeof(cText)) return;
     bsData.Read(cText, cTextLen);
     cText[cTextLen] = '\0';
 
@@ -3606,7 +3613,7 @@ static void TestRakNet_Legacy_Unused()
         strcpy(server.szPassword, "");
 
         char szInfo[400];
-        char szLastInfo[400];
+        char szLastInfo[400]{};   // read by strcmp below before it is ever written
 
         int iLastMoney = iMoney;
         int iLastDrunkLevel = iDrunkLevel;
