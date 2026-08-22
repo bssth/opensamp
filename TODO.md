@@ -191,6 +191,21 @@ below; this is a high-level overview for context.
       wire needs the same read: is the bound checked, and is it checked
       against `sizeof` rather than a copied literal? Player-id indexing is
       already bounds-checked everywhere; lengths were not.
+- [ ] **`BitStream::Read` results are almost never checked.** One call out of
+      210 in `sampraknet_bridge.cpp` looks at the return value. `Read` returns
+      false on a short stream and leaves the destination untouched, so every
+      unchecked call is a handler that proceeds on whatever was in that
+      variable — stale globals, or stack garbage for locals. Three locals
+      where the garbage reached a consumer are fixed; the systematic pass is
+      not done. The shape to copy:
+
+      ```cpp
+      PICKUP Pickup{};
+      if (!bsData.Read((PCHAR)&Pickup, sizeof(PICKUP))) return;
+      ```
+
+      Worth considering a small checked-read helper rather than 209 hand-written
+      `if`s, since the failure action is `return` in nearly every case.
 
 ## P0 — Reproducible dependencies
 
