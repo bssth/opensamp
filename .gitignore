@@ -92,3 +92,7 @@ desktop.ini
 # Kept on disk, deliberately not tracked. Move a file back out of here once it
 # has been rewritten for an outside reader.
 docs/internal/
+
+# ---- Python ----
+__pycache__/
+*.pyc

@@ -145,7 +145,7 @@ def parse(path: Path):
 if __name__ == "__main__":
     paths = sys.argv[1:]
     if not paths:
-        crash_dir = Path("D:/dev/opensamp/bin/crash")
+        crash_dir = Path(__file__).resolve().parent / "bin" / "crash"
         paths = sorted(crash_dir.glob("*.dmp"))[-1:]
     for p in paths:
         parse(Path(p))
