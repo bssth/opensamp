@@ -86,3 +86,9 @@ desktop.ini
 # Machine-local Claude Code settings. Shared project config would be
 # .claude/settings.json, which is not currently tracked either.
 .claude/
+
+# ---- Working notes ----
+# Internal analysis memos that are not part of the published documentation.
+# Kept on disk, deliberately not tracked. Move a file back out of here once it
+# has been rewritten for an outside reader.
+docs/internal/

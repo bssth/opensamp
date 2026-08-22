@@ -10,7 +10,10 @@ protocol, the client is written from scratch and shares no code with the
 original SA-MP client.
 
 > **Status:** early alpha / work in progress.
-> Server connect works, but in-game synchronization is not fully implemented yet.
+> Connecting works, chat and dialogs work, and on-foot synchronization runs at
+> 20 Hz. Vehicle synchronization is partial: the driver path is implemented but
+> untested in game, and passenger / unoccupied / trailer sync are missing.
+> No public builds are released at this time.
 
 ---
 
@@ -29,33 +32,54 @@ original SA-MP client.
 ## Requirements
 
 - Windows 10/11, Visual Studio 2022 (toolset v143, x86).
-- Submodules: [`imgui`](https://github.com/ocornut/imgui),
-  [`sampraknet`](https://github.com/mishpro-programm/sampraknet),
-  [`MinHook`](https://github.com/TsudaKageyu/minhook).
+- No submodules and nothing to fetch: [`imgui`](https://github.com/ocornut/imgui),
+  [`sampraknet`](https://github.com/mishpro-programm/sampraknet) and
+  [`MinHook`](https://github.com/TsudaKageyu/minhook) are vendored under
+  `native/vendor/`, with their provenance and licences recorded there.
 - Target game: **GTA: San Andreas, US 1.0** — other versions are not
-  supported.
+  supported. You supply your own copy; nothing from Rockstar is distributed
+  here.
 
 ## Building and running
 
-> Build instructions will land together with the first public release.
-> Right now this repo is an active work-in-progress; building from
-> source still requires manual setup of game paths and dependencies.
+Full instructions are in **[docs/build.md](docs/build.md)**. In short:
+
+```bash
+git clone <repo-url>
+git config core.hooksPath tools/git-hooks
+```
+
+Put your GTA SA US 1.0 install in `bin/` — that is both the game directory and
+the build output directory — then build `opensamp.sln` as **Win32**. The
+launcher lands at `bin/opensamp.exe`; run it, and it starts the game and
+injects `bin/Client.Native.dll`.
+
+Connect in-game with `//connect <ip> <port> [nick]`.
 
 ## License
 
-TODO - will be decided before the first public release. Because OpenSAMP
-is a clean-room reimplementation (not a SAMP fork), we are not bound by
-SAMP's license.
+OpenSAMP is licensed under the **GNU General Public License v3.0**.
+See [LICENSE](LICENSE) for the full text. Because OpenSAMP is a clean-room
+reimplementation (not a SAMP fork), it is not bound by SAMP's license.
 
-Note that vendored third-party code (`vendor/sampraknet`, `vendor/imgui`,
-MinHook) keeps its own upstream license.
+The copyleft is not merely a preference. The vendored RakNet fork
+(`vendor/sampraknet`) is available to us only under its GPL-v2-or-later option,
+so OpenSAMP cannot be relicensed permissively while it depends on that library.
+Vendored third-party code keeps its own upstream license; all of it is
+inventoried in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), including the
+gaps that still need closing.
 
 ## Roadmap and open work
 
-See [TODO.md](TODO.md).
+See [TODO.md](TODO.md). It is a working document and it is candid about what is
+broken.
 
 ## Contributing
 
-The project is still on the workbench. Pull requests are not accepted
-until LICENSE, CONTRIBUTING and out-of-the-box builds are in place.
-Bug reports and feature suggestions via issues are welcome.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+Two rules matter more than the rest: **no SA-MP client code may ever be pasted
+into this project** — the clean-room provenance is the whole legal basis for it
+existing — and **no GTA game asset may ever be committed**. A pre-commit hook
+enforces the second one.
