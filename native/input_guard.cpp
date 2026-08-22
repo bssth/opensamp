@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 
-#include "vendor/minhook.h"
+#include "MinHook.h"
 #include "gui/chat.hpp"
 #include "gui/dialog.hpp"
 

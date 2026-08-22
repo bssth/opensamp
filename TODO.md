@@ -118,9 +118,9 @@ below; this is a high-level overview for context.
       one. That is what makes GPL-3.0 mandatory rather than optional, and it
       means OpenSAMP **cannot** be relicensed permissively while it links
       this library. `vendor/imgui` is MIT; MinHook is BSD-2-Clause and its
-      text (plus the bundled Hacker Disassembler Engine notice, required
-      because we ship a prebuilt `.lib`) now lives at
-      `native/vendor/MinHook.LICENSE.txt`.
+      upstream licence text — which carries the bundled Hacker Disassembler
+      Engine notice, since HDE is part of MinHook's sources — is vendored
+      verbatim at `native/vendor/minhook/LICENSE.txt`.
 - [ ] **Close the three licensing gaps** listed under "Open questions" in
       THIRD-PARTY-NOTICES.md:
   - The SA-MP files (`SAMPAuth`, `SAMPNetEncr`, `SAMPRPC`) carry no licence
@@ -135,8 +135,10 @@ below; this is a high-level overview for context.
 - [x] **`.gitignore` rewritten.** Now covers `Debug/`/`Release/`/`x64/`,
       all VS/MSBuild intermediates (`*.obj`, `*.pdb`, `*.ilk`, `*.idb`,
       `*.tlog`, `*.lastbuildstate`, `*.exp`, …), `*.user`/`*.suo`, `.vs/`,
-      `.idea/`, `.run/`, `Backup/`. `*.lib` deliberately NOT ignored
-      (vendored import libs under `native/lib/`).
+      `.idea/`, `.run/`, `Backup/`. `*.lib` deliberately NOT ignored, so a
+      stray one shows up in `git status` instead of being hidden — nothing
+      in the tree should need one now that every dependency is vendored as
+      source.
 - [x] **Purged build junk from the index.** 214 tracked files removed via
       `git rm -r --cached` (`native/Debug`, `native/Release`,
       `launcher/{Debug,Release,x64}`, `.vs/`, `.idea/`, `Backup/`, `.run/`,
@@ -239,6 +241,16 @@ below; this is a high-level overview for context.
       in. Worth checking first whether open.mp servers require the SA-MP
       handshake at all — if not, the table is only needed for classic 0.3.7
       servers and can become optional.
+- [x] **MinHook built from source instead of a prebuilt library.**
+      `native/lib/MinHook.x86.lib` was an **import** library, not a static
+      one, so `Client.Native.dll` carried a hard import on `MinHook.x86.dll`
+      — a file that lived only in `bin/` and was never tracked. A fresh clone
+      compiled, linked, and produced a DLL that could not load; linking never
+      needed the DLL, so nothing caught it. Upstream `include/` and `src/`
+      are now vendored at `native/vendor/minhook/` and compiled in, which
+      also settles what the binary was built from. Verified with
+      `dumpbin /dependents`: no MinHook entry remains.
+      `bin/MinHook.x86.dll` is now unused and can be deleted locally.
 
 ## P1 — Builds out of the box
 

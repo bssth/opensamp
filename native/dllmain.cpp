@@ -3,9 +3,8 @@
 #include <stdio.h>
 
 #include "memory.h"
-#include "vendor/minhook.h"
+#include "MinHook.h"
 
-#pragma comment(lib, "MinHook.x86.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "dbghelp.lib")
 

@@ -11,7 +11,7 @@
 #include "gui/gui.h"
 #include "input_guard.h"
 #include "net/netgame.h"
-#include "vendor/minhook.h"
+#include "MinHook.h"
 
 // ---------------- debug log ----------------
 

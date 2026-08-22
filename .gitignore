@@ -26,7 +26,9 @@ x86/
 *.FileListAbsolute.txt
 *.log
 
-# NOTE: *.lib is intentionally NOT ignored — vendored import libs live under vendor/lib/.
+# NOTE: *.lib is deliberately absent from this list, so a stray one is visible
+# in `git status` rather than silently ignored. Nothing in the tree should need
+# one: every dependency is vendored as source and linked statically.
 
 # ---- Visual Studio ----
 .vs/
@@ -76,11 +78,6 @@ Backup/
 Thumbs.db
 desktop.ini
 
-# ---- Exceptions ----
-# Vendored prebuilt MinHook import library and its link artefact are tracked
-# on purpose, even though the intermediates rules above would catch them.
-!native/lib/
-!native/lib/**
 
 # ---- Agent / assistant local state ----
 # Machine-local Claude Code settings. Shared project config would be

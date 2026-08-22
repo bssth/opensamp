@@ -17,12 +17,13 @@ builds.
 | --- | --- | --- | --- |
 | RakNet 3.x, SA-MP-compatible fork (`sampraknet`) | `native/vendor/sampraknet/` | [mishpro-programm/sampraknet](https://github.com/mishpro-programm/sampraknet) `e891acf` | Multi-licensed by Rakkarsoft — OpenSAMP elects the **GPL v2-or-later** option |
 | Dear ImGui | `native/vendor/imgui/` | [ocornut/imgui](https://github.com/ocornut/imgui) `eaa32bb7` (v1.92.5+) | MIT |
-| MinHook | `native/vendor/minhook.h`, `native/lib/MinHook.x86.lib` | [TsudaKageyu/minhook](https://github.com/TsudaKageyu/minhook) | BSD-2-Clause |
+| MinHook | `native/vendor/minhook/` | [TsudaKageyu/minhook](https://github.com/TsudaKageyu/minhook) `d94c64d3` (post-v1.3.3) | BSD-2-Clause |
 
 Per-component provenance, the exact upstream commits, and the list of local
 modifications live next to the code, in
-[`native/vendor/sampraknet/OPENSAMP-NOTICE.md`](native/vendor/sampraknet/OPENSAMP-NOTICE.md)
-and [`native/vendor/imgui/UPSTREAM.md`](native/vendor/imgui/UPSTREAM.md).
+[`native/vendor/sampraknet/OPENSAMP-NOTICE.md`](native/vendor/sampraknet/OPENSAMP-NOTICE.md),
+[`native/vendor/imgui/UPSTREAM.md`](native/vendor/imgui/UPSTREAM.md)
+and [`native/vendor/minhook/UPSTREAM.md`](native/vendor/minhook/UPSTREAM.md).
 
 ---
 
@@ -136,17 +137,23 @@ to change, are set out in
 
 ### 3. MinHook
 
-- **Path:** `native/vendor/minhook.h` (header),
-  `native/lib/MinHook.x86.lib` (prebuilt static library)
-- **Upstream:** <https://github.com/TsudaKageyu/minhook>
+- **Path:** `native/vendor/minhook/` — full upstream `include/` and `src/`,
+  compiled into `Client.Native.dll`
+- **Upstream:** <https://github.com/TsudaKageyu/minhook> at `d94c64d3`
+  (`master`, post-v1.3.3; upstream has not tagged since 2017)
 - **License:** BSD-2-Clause, Copyright (C) 2009-2017 Tsuda Kageyu.
-  Full text, including the bundled Hacker Disassembler Engine notice
-  (Copyright (c) 2008-2009, Vyacheslav Patkov), is in
-  [`native/vendor/MinHook.LICENSE.txt`](native/vendor/MinHook.LICENSE.txt).
-  BSD-2-Clause is GPL-compatible.
-- Because we ship a **prebuilt** `.lib`, the HDE notice must travel with any
-  binary distribution — that is why the licence file lives in the repo rather
-  than only in the header comment.
+  Upstream's `LICENSE.txt` is vendored verbatim at
+  [`native/vendor/minhook/LICENSE.txt`](native/vendor/minhook/LICENSE.txt) and
+  carries the bundled Hacker Disassembler Engine notice (Copyright (c)
+  2008-2009, Vyacheslav Patkov). BSD-2-Clause is GPL-compatible.
+- MinHook's sources include HDE, so its notice must travel with any binary
+  distribution of the client. Both BSD-2-Clause notices are satisfied by
+  shipping that licence file alongside a release.
+- An earlier revision linked `native/lib/MinHook.x86.lib`, described here as a
+  prebuilt *static* library. It was an **import** library: the built DLL
+  carried a runtime dependency on `MinHook.x86.dll`, which was never tracked,
+  so a fresh clone produced a binary that could not load. Building from source
+  removes the dependency and makes the provenance checkable.
 
 ### 4. Microsoft redistributables
 
