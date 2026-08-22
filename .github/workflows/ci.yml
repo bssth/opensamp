@@ -73,6 +73,48 @@ jobs:
           "Build ``${{ matrix.configuration }}|Win32``: clean, no warnings in first-party code.`n" |
             Out-File -Append $env:GITHUB_STEP_SUMMARY
 
+      # A prebuilt import library once gave the DLL a runtime dependency on
+      # MinHook.x86.dll, a file that was never tracked. Everything compiled and
+      # linked; the result simply could not load, and no gate noticed because
+      # linking never needs the DLL. Import tables are cheap to check, so check
+      # them: anything outside the Windows/CRT allowlist means a dependency was
+      # added that a user will not have.
+      - name: Check for unexpected runtime dependencies
+        shell: pwsh
+        run: |
+          $dumpbin = Get-ChildItem "${env:ProgramFiles(x86)}\Microsoft Visual Studio", "$env:ProgramFiles\Microsoft Visual Studio" `
+            -Recurse -Filter dumpbin.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $dumpbin) { Write-Host "::error::dumpbin not found"; exit 1 }
+
+          $allowed = @(
+            '^api-ms-win-',                 # CRT/Win32 API sets
+            '^(msvcp|vcruntime|concrt)\d+d?\.dll$',
+            '^ucrtbase(d)?\.dll$',
+            '^(kernel32|user32|gdi32|shell32|advapi32|ole32|oleaut32|imm32|version|dbghelp|ws2_32|d3d9|shlwapi|psapi|crypt32|rpcrt4|sechost|combase|bcrypt)\.dll$'
+          )
+
+          $bad = @()
+          foreach ($bin in @("bin/Client.Native.dll", "bin/opensamp.exe")) {
+            & $dumpbin.FullName /nologo /dependents $bin |
+              Select-String -Pattern '^\s{4}(\S+\.dll)$' |
+              ForEach-Object { $_.Matches[0].Groups[1].Value } |
+              ForEach-Object {
+                $dll = $_
+                if (-not ($allowed | Where-Object { $dll -imatch $_ })) { $bad += "$bin -> $dll" }
+              }
+          }
+
+          if ($bad) {
+            Write-Host "::error::unexpected runtime dependencies"
+            $bad | ForEach-Object { Write-Host $_ }
+            "## Unexpected runtime dependencies`n" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            $bad | ForEach-Object { "- ``$_``" | Out-File -Append $env:GITHUB_STEP_SUMMARY }
+            Write-Host "If this dependency is deliberate, add it to the allowlist in this step"
+            Write-Host "and make sure the artifact actually ships whatever provides it."
+            exit 1
+          }
+          Write-Host "Only Windows and CRT dependencies. Artifact is self-contained."
+
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
