@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11505.172 d18.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "native", "native\native.vcxproj", "{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "launcher", "launcher\launcher.vcxproj", "{27B40D51-A37C-4746-B7E9-9D147F29D123}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}.Debug|Win32.ActiveCfg = Debug|Win32
+		{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}.Debug|Win32.Build.0 = Debug|Win32
+		{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}.Release|Win32.ActiveCfg = Release|Win32
+		{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}.Release|Win32.Build.0 = Release|Win32
+		{27B40D51-A37C-4746-B7E9-9D147F29D123}.Debug|Win32.ActiveCfg = Debug|Win32
+		{27B40D51-A37C-4746-B7E9-9D147F29D123}.Debug|Win32.Build.0 = Debug|Win32
+		{27B40D51-A37C-4746-B7E9-9D147F29D123}.Release|Win32.ActiveCfg = Release|Win32
+		{27B40D51-A37C-4746-B7E9-9D147F29D123}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {642EC467-52F5-401A-98C9-37A3C2F31F28}
+	EndGlobalSection
+EndGlobal

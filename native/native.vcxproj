@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup Label="ProjectConfigurations">
+        <ProjectConfiguration Include="Debug|Win32">
+            <Configuration>Debug</Configuration>
+            <Platform>Win32</Platform>
+        </ProjectConfiguration>
+        <ProjectConfiguration Include="Release|Win32">
+            <Configuration>Release</Configuration>
+            <Platform>Win32</Platform>
+        </ProjectConfiguration>
+    </ItemGroup>
+    <ItemGroup>
+        <Lib Include="lib\*.lib"/>
+    </ItemGroup>
+    <PropertyGroup Label="Globals">
+        <VCProjectVersion>15.0</VCProjectVersion>
+        <ProjectGuid>{55D3B7D0-F84B-4C56-8EC9-D8EACC2EEF22}</ProjectGuid>
+        <Keyword>Win32Proj</Keyword>
+        <RootNamespace>native</RootNamespace>
+        <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    </PropertyGroup>
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
+    <PropertyGroup>
+        <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <UseDebugLibraries>true</UseDebugLibraries>
+        <PlatformToolset>v143</PlatformToolset>
+        <CharacterSet>Unicode</CharacterSet>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+        <ConfigurationType>DynamicLibrary</ConfigurationType>
+        <UseDebugLibraries>false</UseDebugLibraries>
+        <PlatformToolset>v143</PlatformToolset>
+        <WholeProgramOptimization>true</WholeProgramOptimization>
+        <CharacterSet>Unicode</CharacterSet>
+    </PropertyGroup>
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
+    <ImportGroup Label="ExtensionSettings">
+    </ImportGroup>
+    <ImportGroup Label="Shared">
+    </ImportGroup>
+    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform"/>
+    </ImportGroup>
+    <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+        <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform"/>
+    </ImportGroup>
+    <PropertyGroup Label="UserMacros"/>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        <LinkIncremental>true</LinkIncremental>
+        <OutDir>$(SolutionDir)\bin\</OutDir>
+        <TargetName>Client.Native</TargetName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+        <LinkIncremental>false</LinkIncremental>
+        <OutDir>$(SolutionDir)\bin\</OutDir>
+        <TargetName>Client.Native</TargetName>
+    </PropertyGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        <ClCompile>
+            <PrecompiledHeader>NotUsing</PrecompiledHeader>
+            <WarningLevel>Level3</WarningLevel>
+            <Optimization>Disabled</Optimization>
+            <SDLCheck>true</SDLCheck>
+            <PreprocessorDefinitions>WIN32;_DEBUG;CPPDYNAMICLIBRARYTEMPLATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS</PreprocessorDefinitions>
+            <ConformanceMode>true</ConformanceMode>
+            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+            <LanguageStandard>stdcpp20</LanguageStandard>
+            <AdditionalIncludeDirectories>$(ProjectDir)vendor\imgui;$(ProjectDir)vendor\sampraknet\include;$(ProjectDir)lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        </ClCompile>
+        <Link>
+            <SubSystem>Windows</SubSystem>
+            <GenerateDebugInformation>true</GenerateDebugInformation>
+            <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        </Link>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+        <ClCompile>
+            <PrecompiledHeader>NotUsing</PrecompiledHeader>
+            <WarningLevel>Level3</WarningLevel>
+            <Optimization>MaxSpeed</Optimization>
+            <FunctionLevelLinking>true</FunctionLevelLinking>
+            <IntrinsicFunctions>true</IntrinsicFunctions>
+            <SDLCheck>true</SDLCheck>
+            <PreprocessorDefinitions>WIN32;NDEBUG;CPPDYNAMICLIBRARYTEMPLATE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS</PreprocessorDefinitions>
+            <ConformanceMode>true</ConformanceMode>
+            <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+            <LanguageStandard>stdcpp20</LanguageStandard>
+            <AdditionalIncludeDirectories>$(ProjectDir)vendor\imgui;$(ProjectDir)vendor\sampraknet\include;$(ProjectDir)lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        </ClCompile>
+        <Link>
+            <SubSystem>Windows</SubSystem>
+            <EnableCOMDATFolding>true</EnableCOMDATFolding>
+            <OptimizeReferences>true</OptimizeReferences>
+            <GenerateDebugInformation>true</GenerateDebugInformation>
+            <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+        </Link>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup>
+        <ClCompile>
+            <AdditionalIncludeDirectories>$(ProjectDir)lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        </ClCompile>
+        <Link>
+            <AdditionalLibraryDirectories>$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+        </Link>
+    </ItemDefinitionGroup>
+    <ItemGroup>
+        <ClCompile Include="diag.cpp"/>
+        <ClCompile Include="dllmain.cpp"/>
+        <ClCompile Include="d3d.cpp"/>
+        <ClCompile Include="gui\chat.cpp"/>
+        <ClCompile Include="gui\dialog.cpp"/>
+        <ClCompile Include="gui\imgui_manager.cpp"/>
+        <ClCompile Include="hooks.cpp"/>
+        <ClCompile Include="input_guard.cpp"/>
+        <ClCompile Include="net\netgame.cpp"/>
+        <ClCompile Include="patches.cpp"/>
+        <ClCompile Include="sampraknet_bridge.cpp"/>
+        <ClCompile Include="vendor\imgui\backends\imgui_impl_dx9.cpp"/>
+        <ClCompile Include="vendor\imgui\backends\imgui_impl_win32.cpp"/>
+        <ClCompile Include="vendor\imgui\imgui.cpp"/>
+        <ClCompile Include="vendor\imgui\imgui_demo.cpp"/>
+        <ClCompile Include="vendor\imgui\imgui_draw.cpp"/>
+        <ClCompile Include="vendor\imgui\imgui_tables.cpp"/>
+        <ClCompile Include="vendor\imgui\imgui_widgets.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\BitStream.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\CheckSum.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\DataBlockEncryptor.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\DS_HuffmanEncodingTree.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\GetTime.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\InternalPacketPool.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\NetworkIDGenerator.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\NetworkTypes.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\PluginInterface.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RakClient.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RakNetworkFactory.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RakPeer.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RakServer.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RakSleep.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\Rand.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\ReliabilityLayer.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\rijndael.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\RPCMap.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\SAMPAuth.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\SAMPNetEncr.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\SHA1.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\SimpleMutex.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\SocketLayer.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\StringCompressor.cpp"/>
+        <ClCompile Include="vendor\sampraknet\src\StringTable.cpp"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ClInclude Include="diag.h"/>
+        <ClInclude Include="game\game.h"/>
+        <ClInclude Include="gta\common.h"/>
+        <ClInclude Include="gta\sa_state.h"/>
+        <ClInclude Include="gui\chat.hpp"/>
+        <ClInclude Include="gui\dialog.hpp"/>
+        <ClInclude Include="gui\gui.h"/>
+        <ClInclude Include="input_guard.h"/>
+        <ClInclude Include="memory.h"/>
+        <ClInclude Include="net\netgame.h"/>
+        <ClInclude Include="sampraknet_bridge.h"/>
+        <ClInclude Include="util\encoding.h"/>
+        <ClInclude Include="vendor\imgui\backends\imgui_impl_dx9.h"/>
+        <ClInclude Include="vendor\imgui\backends\imgui_impl_win32.h"/>
+        <ClInclude Include="vendor\imgui\imconfig.h"/>
+        <ClInclude Include="vendor\imgui\imgui.h"/>
+        <ClInclude Include="vendor\imgui\imstb_rectpack.h"/>
+        <ClInclude Include="vendor\imgui\imstb_textedit.h"/>
+        <ClInclude Include="vendor\imgui\imstb_truetype.h"/>
+        <ClInclude Include="vendor\minhook.h"/>
+    </ItemGroup>
+    <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+    <ImportGroup Label="ExtensionTargets">
+    </ImportGroup>
+</Project>
