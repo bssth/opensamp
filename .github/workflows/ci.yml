@@ -19,7 +19,7 @@ jobs:
   # per clone, so it is advice; this is the check that has to pass.
   guard:
     name: Tree guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Check tracked tree
@@ -27,7 +27,10 @@ jobs:
 
   build:
     name: Build ${{ matrix.configuration }}
-    runs-on: windows-latest
+    # Pinned, not -latest. This job's gate is "zero warnings", so a runner
+    # image bump would change the compiler underneath it and break main
+    # without a commit. Bump deliberately and read the diff in the warnings.
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
@@ -90,7 +93,10 @@ jobs:
 
   analyze:
     name: Static analysis
-    runs-on: ubuntu-latest
+    # Pinned for the same reason as the build job: the apt cppcheck version
+    # rides on the image, and a bump changes which defects are found. It is
+    # cppcheck 2.13 here. Bumping is fine — expect new findings when you do.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -98,7 +104,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cppcheck
-          cppcheck --version
+          cppcheck --version | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Blocking gate. cppcheck's default severity is `error`: definite
       # defects such as out-of-bounds indexing, null dereferences and leaks,
