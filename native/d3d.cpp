@@ -293,5 +293,9 @@ void D3D_Start()
     if (started) return;
     started = true;
 
-    CreateThread(nullptr, 0, HookThread, nullptr, 0, nullptr);
+    // Fire and forget: the thread outlives this call, and closing the handle
+    // only drops our reference to it. Not closing it leaks a kernel handle for
+    // the lifetime of the process.
+    if (HANDLE h = CreateThread(nullptr, 0, HookThread, nullptr, 0, nullptr))
+        CloseHandle(h);
 }

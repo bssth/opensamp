@@ -71,6 +71,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     }
 
     DisableThreadLibraryCalls(hModule);
-    CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
+    if (HANDLE h = CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr))
+        CloseHandle(h);
     return true;
 }
