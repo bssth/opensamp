@@ -838,14 +838,17 @@ void Packet_PassengerSync(Packet* p, RakClientInterface* pRakClient)
 {
     RakNet::BitStream bsPassengerSync(p->data, p->length, false);
     PLAYERID playerId;
-    PASSENGER_SYNC_DATA psSync;
+    PASSENGER_SYNC_DATA psSync{};
 
     bsPassengerSync.IgnoreBits(8);
     bsPassengerSync.Read(playerId);
 
     if (playerId < 0 || playerId >= MAX_PLAYERS) return;
 
-    bsPassengerSync.Read((PCHAR)&psSync, sizeof(PASSENGER_SYNC_DATA));
+    // Read returns false when the packet is short, and leaves psSync as it
+    // found it. Value-initialised above so a partial packet cannot hand stale
+    // stack bytes to the consumer this is about to grow.
+    if (!bsPassengerSync.Read((PCHAR)&psSync, sizeof(PASSENGER_SYNC_DATA))) return;
 
     // Followed wants to drive the vehicle
     // playerInfo[playerId].passengerData.VehicleID = psSync.VehicleID;
@@ -1536,10 +1539,12 @@ void Pickup(RPCParameters* rpcParams)
     RakNet::BitStream bsData((unsigned char*)Data, (iBitLength / 8) + 1, false);
 
     int PickupID;
-    PICKUP Pickup;
+    PICKUP Pickup{};
 
     bsData.Read(PickupID);
-    bsData.Read((PCHAR)&Pickup, sizeof(PICKUP));
+    // Every field below is formatted into the log line, so a short packet
+    // would print uninitialised stack bytes.
+    if (!bsData.Read((PCHAR)&Pickup, sizeof(PICKUP))) return;
 
     char szCreatePickupAlert[256];
     sprintf_s(szCreatePickupAlert, sizeof(szCreatePickupAlert),
@@ -2682,13 +2687,15 @@ void ScrShowTextDraw(RPCParameters* rpcParams)
     RakNet::BitStream bsData((unsigned char*)Data, (iBitLength / 8) + 1, false);
 
     WORD wTextID;
-    TEXT_DRAW_TRANSMIT TextDrawTransmit;
+    TEXT_DRAW_TRANSMIT TextDrawTransmit{};
 
     CHAR cText[1024];
     unsigned short cTextLen = 0;
 
     bsData.Read(wTextID);
-    bsData.Read((PCHAR)&TextDrawTransmit, sizeof(TEXT_DRAW_TRANSMIT));
+    // Stored by SaveTextDrawData and branched on below, so a short packet
+    // must not be allowed to leave it holding stack garbage.
+    if (!bsData.Read((PCHAR)&TextDrawTransmit, sizeof(TEXT_DRAW_TRANSMIT))) return;
     bsData.Read(cTextLen);
     // cTextLen is server-controlled and reaches 65535; cText is 1 KiB.
     if (cTextLen >= sizeof(cText)) return;
