@@ -21,7 +21,7 @@ jobs:
     name: Tree guard
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check tracked tree
         run: bash tools/ci/check-tree.sh
 
@@ -36,9 +36,9 @@ jobs:
       matrix:
         configuration: [Debug, Release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
 
       # Win32 only. The client targets GTA SA US 1.0, which is a 32-bit
       # process; an x64 build would not be injectable and is not a goal.
@@ -86,22 +86,28 @@ jobs:
             -Recurse -Filter dumpbin.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $dumpbin) { Write-Host "::error::dumpbin not found"; exit 1 }
 
-          $allowed = @(
-            '^api-ms-win-',                 # CRT/Win32 API sets
-            '^(msvcp|vcruntime|concrt)\d+d?\.dll$',
-            '^ucrtbase(d)?\.dll$',
-            '^(kernel32|user32|gdi32|shell32|advapi32|ole32|oleaut32|imm32|version|dbghelp|ws2_32|d3d9|shlwapi|psapi|crypt32|rpcrt4|sechost|combase|bcrypt)\.dll$'
-          )
+          # Deliberately not a list of DLL names. Hand-maintained allowlists rot:
+          # the first version of this step passed on Release and failed on Debug,
+          # because /OPT:REF drops an unreferenced import in Release that Debug
+          # keeps. Ask the question that actually matters instead — will the user
+          # already have this file?
+          $vcRuntime = '^(msvcp|vcruntime|concrt)\d+d?\.dll$|^ucrtbase(d)?\.dll$'
+
+          function Test-Expected([string]$dll) {
+            if ($dll -imatch '^api-ms-win-') { return $true }   # API set, resolved by the loader
+            if ($dll -imatch $vcRuntime)     { return $true }   # VC++ redist, documented in docs/build.md
+            foreach ($dir in @("System32", "SysWOW64")) {       # shipped with Windows
+              if (Test-Path (Join-Path $env:SystemRoot "$dir\$dll")) { return $true }
+            }
+            return $false
+          }
 
           $bad = @()
           foreach ($bin in @("bin/Client.Native.dll", "bin/opensamp.exe")) {
             & $dumpbin.FullName /nologo /dependents $bin |
               Select-String -Pattern '^\s{4}(\S+\.dll)$' |
               ForEach-Object { $_.Matches[0].Groups[1].Value } |
-              ForEach-Object {
-                $dll = $_
-                if (-not ($allowed | Where-Object { $dll -imatch $_ })) { $bad += "$bin -> $dll" }
-              }
+              ForEach-Object { if (-not (Test-Expected $_)) { $bad += "$bin -> $_" } }
           }
 
           if ($bad) {
@@ -109,14 +115,14 @@ jobs:
             $bad | ForEach-Object { Write-Host $_ }
             "## Unexpected runtime dependencies`n" | Out-File -Append $env:GITHUB_STEP_SUMMARY
             $bad | ForEach-Object { "- ``$_``" | Out-File -Append $env:GITHUB_STEP_SUMMARY }
-            Write-Host "If this dependency is deliberate, add it to the allowlist in this step"
-            Write-Host "and make sure the artifact actually ships whatever provides it."
+            Write-Host "This is a file the user will not have. Either drop the dependency,"
+            Write-Host "or ship whatever provides it and say so in docs/build.md."
             exit 1
           }
           Write-Host "Only Windows and CRT dependencies. Artifact is self-contained."
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: opensamp-${{ matrix.configuration }}-win32
           path: |
@@ -127,7 +133,7 @@ jobs:
 
       - name: Upload build log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-log-${{ matrix.configuration }}
           path: build.log
@@ -140,7 +146,7 @@ jobs:
     # cppcheck 2.13 here. Bumping is fine — expect new findings when you do.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install cppcheck
         run: |
