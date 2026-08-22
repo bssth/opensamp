@@ -1,0 +1,28 @@
+# Normalise line endings in the repository, check out native to the platform.
+# Without this the tree carries a mix of CRLF and LF and the first cross-platform
+# pull request rewrites whole files.
+* text=auto
+
+# Windows-only project files. Visual Studio is happiest with CRLF on disk and
+# rewrites them otherwise, which shows up as spurious diffs.
+*.sln       text eol=crlf
+*.vcxproj   text eol=crlf
+*.filters   text eol=crlf
+*.props     text eol=crlf
+*.rc        text eol=crlf
+
+# Shell scripts and git hooks must keep LF even when checked out on Windows.
+tools/git-hooks/*  text eol=lf
+*.sh               text eol=lf
+
+# Vendored third-party code is committed byte-for-byte as shipped upstream, so
+# that `vendor/imgui/UPSTREAM.md`'s byte-identical claim stays checkable and the
+# sampraknet patch stays a reviewable diff. Do not let git touch these bytes.
+native/vendor/**  -text
+
+# Binaries.
+*.lib   binary
+*.exp   binary
+*.ico   binary
+*.dll   binary
+*.exe   binary

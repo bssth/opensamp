@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# OpenSAMP pre-commit guard.
+#
+# Enable with:  git config core.hooksPath tools/git-hooks
+#
+# Rejects two classes of mistake that are expensive to undo once pushed:
+#   1. Proprietary GTA: San Andreas assets. bin/ is a real game install; a
+#      regression in .gitignore would publish Rockstar's files in a public repo.
+#   2. Oversized files. Build junk and redistributable installers do not belong
+#      in history, and git never forgets them.
+#
+# Override for a single commit with:  git commit --no-verify
+# If you need that for anything other than a false positive, stop and think.
+
+max_size_bytes=5242880   # 5 MiB
+status=0
+
+# Extensions that are unambiguously GTA game data. Deliberately does NOT list
+# generic extensions such as .dat or .cfg: everything under bin/ is rejected
+# wholesale below, so the narrow list is enough and costs no false positives.
+asset_re='(^|/)gta_sa\.exe$|\.([Ii][Mm][Gg]|[Dd][Ff][Ff]|[Tt][Xx][Dd]|[Ii][Pp][Ll]|[Ii][Dd][Ee]|[Cc][Oo][Ll]|[Ii][Ff][Pp]|[Ss][Cc][Mm]|[Gg][Xx][Tt])$'
+tree_re='^(bin|redist)/'
+
+report() {
+    # $1 = heading, remaining stdin = offending paths
+    echo "pre-commit: $1"
+    while IFS= read -r path; do
+        [ -n "$path" ] && echo "    $path"
+    done
+    echo
+}
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+# ---- 1. Proprietary game assets -------------------------------------------
+
+hits=$(printf '%s\n' "$staged" | grep -E "$asset_re")
+if [ -n "$hits" ]; then
+    printf '%s\n' "$hits" | report "refusing to commit files that look like GTA SA game data:"
+    echo "    These are Rockstar's proprietary assets and must never enter this"
+    echo "    repository. If one of these is genuinely ours, rename it or narrow"
+    echo "    the pattern in tools/git-hooks/pre-commit -- do not bypass the hook."
+    echo
+    status=1
+fi
+
+hits=$(printf '%s\n' "$staged" | grep -E "$tree_re")
+if [ -n "$hits" ]; then
+    printf '%s\n' "$hits" | report "refusing to commit files under bin/ or redist/:"
+    echo "    bin/ is the game directory and the build output directory;"
+    echo "    redist/ holds third-party installers. Neither is tracked."
+    echo "    See docs/build.md."
+    echo
+    status=1
+fi
+
+# ---- 2. Oversized files ----------------------------------------------------
+
+printf '%s\n' "$staged" | while IFS= read -r file; do
+    [ -n "$file" ] || continue
+    blob=$(git rev-parse --verify --quiet ":$file") || continue
+    size=$(git cat-file -s "$blob" 2>/dev/null) || continue
+    if [ "$size" -gt "$max_size_bytes" ]; then
+        echo "pre-commit: $file is $((size / 1024)) KiB, over the $((max_size_bytes / 1024)) KiB limit."
+        echo "    Large binaries belong in release assets, not in git history."
+        echo
+        exit 1
+    fi
+done || status=1
+
+exit $status

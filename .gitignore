@@ -1,0 +1,88 @@
+# ---- Build outputs ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww]in32/
+
+# Object / linker / compiler intermediates
+*.obj
+*.o
+*.pdb
+*.ilk
+*.idb
+*.iobj
+*.ipdb
+*.exp
+*.lib.recipe
+*.exe.recipe
+*.res
+*.tlog
+*.lastbuildstate
+*.unsuccessfulbuild
+*.CppClean.log
+*.FileListAbsolute.txt
+*.log
+
+# NOTE: *.lib is intentionally NOT ignored — vendored import libs live under vendor/lib/.
+
+# ---- Visual Studio ----
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+
+# ---- JetBrains Rider / ReSharper ----
+.idea/
+.run/
+/_ReSharper.Caches/
+*.DotSettings.user
+riderModule.iml
+
+# ---- NuGet ----
+/packages/
+
+# ---- Redistributables ----
+# Third-party installers (VC++ runtime etc.) are NOT kept in git.
+# See docs/build.md for where to get them.
+redist/
+
+# ---- Runtime output ----
+crash/
+*.dmp
+
+# ---- Proprietary game data ----
+# bin/ is a real GTA SA install. It must NEVER be committed.
+# See tools/git-hooks/pre-commit for the enforcing guard.
+*.img
+*.dff
+*.txd
+*.ipl
+*.ide
+*.col
+gta_sa.exe
+
+# ---- Misc local junk ----
+Backup/
+*.bak
+Thumbs.db
+desktop.ini
+
+# ---- Exceptions ----
+# Vendored prebuilt MinHook import library and its link artefact are tracked
+# on purpose, even though the intermediates rules above would catch them.
+!native/lib/
+!native/lib/**
+
+# ---- Agent / assistant local state ----
+# Machine-local Claude Code settings. Shared project config would be
+# .claude/settings.json, which is not currently tracked either.
+.claude/
