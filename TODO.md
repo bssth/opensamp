@@ -153,9 +153,11 @@ below; this is a high-level overview for context.
       `redist/`, and any file over 5 MiB. Enable with
       `git config core.hooksPath tools/git-hooks` (documented in
       CONTRIBUTING.md and docs/build.md).
-- [ ] **CI-side version of the same guard.** The hook is opt-in per clone;
-      a GitHub Actions check would be authoritative. Fold into the CI item
-      under P1.
+- [x] **CI-side version of the same guard.** `tools/ci/check-tree.sh` runs
+      the hook's checks over the whole tracked tree in CI, plus two the hook
+      does not do: local workstation paths / leaked-source-tree references,
+      and unfilled placeholders. Run it locally with
+      `bash tools/ci/check-tree.sh`.
 - [x] **README.md** — build/run section written, status corrected (on-foot
       sync works; vehicle sync partial), license and contributing sections
       point at the new documents.
@@ -179,6 +181,16 @@ below; this is a high-level overview for context.
 - [x] **No references to leaked SA-MP sources.** Offset provenance is stated
       in terms of public reverse-engineering references; no source tree is
       named and no local paths remain in the tree.
+- [x] **Bounded three server-controlled buffer lengths.** `ScrGameText` wrote
+      one byte past a 400-byte stack buffer and accepted a negative length;
+      `ScrShowTextDraw` and `ScrEditTextDraw` accepted up to 65535 bytes into
+      1 KiB. All reachable from any server the user connects to.
+- [ ] **Audit the rest of the RPC surface the same way.** The three above
+      were found by following one cppcheck hit to its neighbours, not by a
+      systematic pass. Every handler that reads a length or an index off the
+      wire needs the same read: is the bound checked, and is it checked
+      against `sizeof` rather than a copied literal? Player-id indexing is
+      already bounds-checked everywhere; lengths were not.
 
 ## P0 — Reproducible dependencies
 
@@ -218,8 +230,15 @@ below; this is a high-level overview for context.
 - [ ] **CMake alongside `.sln`.** Right now the project only builds via
       Visual Studio 2022 on Windows. That's fine for the target platform
       but CMake makes CI and clang-cl experiments much cheaper.
-- [ ] **GitHub Actions CI.** At minimum: build on push. Ideally with
-      clang-tidy and cppcheck.
+- [x] **GitHub Actions CI.** `.github/workflows/ci.yml`: tree guard, a
+      Debug + Release Win32 build that fails on any warning in first-party
+      code and uploads both binaries, and cppcheck in two passes — blocking
+      on definite defects, advisory on style/performance/portability. The
+      first cppcheck run found a real off-by-one in `ScrGameText`.
+- [ ] **clang-tidy and a formatting check.** Neither is wired up. Formatting
+      has nothing to check against: the tree has no agreed style, and mixes
+      RakSAMP-era hungarian notation with modern C++ in the same file.
+      Agree a `.clang-format` before adding the gate, or it will just churn.
 - [x] **`docs/build.md`** — toolchain, the `bin/` layout, the `SolutionDir`
       trap when building a `.vcxproj` directly, running, crash dumps, and why
       the DLL fails to load.
