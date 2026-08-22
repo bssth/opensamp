@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the same branch makes the previous run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The authoritative version of tools/git-hooks/pre-commit. The hook is opt-in
+  # per clone, so it is advice; this is the check that has to pass.
+  guard:
+    name: Tree guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tracked tree
+        run: bash tools/ci/check-tree.sh
+
+  build:
+    name: Build ${{ matrix.configuration }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      # Win32 only. The client targets GTA SA US 1.0, which is a 32-bit
+      # process; an x64 build would not be injectable and is not a goal.
+      - name: Build
+        run: >
+          msbuild opensamp.sln
+          /p:Configuration=${{ matrix.configuration }}
+          /p:Platform=Win32
+          /m /nologo /verbosity:minimal
+          /fileLogger "/fileLoggerParameters:LogFile=build.log;Verbosity=normal"
+
+      # docs/build.md states the project builds with 0 warnings and treats that
+      # as the standard, so enforce it — but only for our own code. The
+      # vendored trees are compiled as upstream ships them and are not ours to
+      # keep warning-clean; MSB8029 is a runner-layout notice, not a defect.
+      - name: Enforce zero warnings in first-party code
+        shell: pwsh
+        run: |
+          $warnings = Select-String -Path build.log -Pattern ': (warning|error) ' |
+            ForEach-Object { $_.Line.Trim() } |
+            Where-Object { $_ -notmatch 'native\\vendor\\' -and $_ -notmatch 'MSB8029' } |
+            Sort-Object -Unique
+
+          if ($warnings) {
+            Write-Host "::error::$($warnings.Count) warning(s) in first-party code"
+            $warnings | ForEach-Object { Write-Host $_ }
+            "## Warnings in first-party code`n" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            $warnings | ForEach-Object { "- ``$_``" | Out-File -Append $env:GITHUB_STEP_SUMMARY }
+            exit 1
+          }
+          Write-Host "No warnings outside vendored code."
+          "Build ``${{ matrix.configuration }}|Win32``: clean, no warnings in first-party code.`n" |
+            Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: opensamp-${{ matrix.configuration }}-win32
+          path: |
+            bin/Client.Native.dll
+            bin/opensamp.exe
+            bin/*.pdb
+          if-no-files-found: error
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ matrix.configuration }}
+          path: build.log
+          if-no-files-found: ignore
+
+  analyze:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck
+          cppcheck --version
+
+      # Blocking gate. cppcheck's default severity is `error`: definite
+      # defects such as out-of-bounds indexing, null dereferences and leaks,
+      # not style opinions. Running without the Windows SDK means the platform
+      # macros are unknown, hence the suppressions — they hide unresolvable
+      # noise, not findings.
+      - name: cppcheck — definite defects
+        run: |
+          cppcheck \
+            --std=c++20 --language=c++ --platform=win32A \
+            -D_WIN32 -DWIN32 -D_MSC_VER=1943 \
+            -I native \
+            -i native/vendor \
+            --inline-suppr \
+            --suppress=missingInclude \
+            --suppress=missingIncludeSystem \
+            --suppress=unknownMacro \
+            --suppress=preprocessorErrorDirective \
+            --error-exitcode=1 \
+            native launcher
+
+      # Advisory. Style, performance and portability findings are reported in
+      # the job summary so they are visible without gating a merge on taste.
+      - name: cppcheck — advisory report
+        if: always()
+        run: |
+          cppcheck \
+            --std=c++20 --language=c++ --platform=win32A \
+            -D_WIN32 -DWIN32 -D_MSC_VER=1943 \
+            -I native \
+            -i native/vendor \
+            --inline-suppr \
+            --enable=warning,performance,portability \
+            --suppress=missingInclude \
+            --suppress=missingIncludeSystem \
+            --suppress=unknownMacro \
+            --suppress=preprocessorErrorDirective \
+            --template='{file}:{line}: {severity}: {message} [{id}]' \
+            native launcher 2> advisory.txt || true
+
+          count=$(grep -c . advisory.txt || true)
+          {
+            echo "## cppcheck advisory findings: ${count:-0}"
+            echo
+            if [ "${count:-0}" -gt 0 ]; then
+              echo '```'
+              head -n 100 advisory.txt
+              [ "${count:-0}" -gt 100 ] && echo "... $((count - 100)) more"
+              echo '```'
+            else
+              echo "None."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
